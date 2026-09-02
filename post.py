@@ -3,7 +3,8 @@ import random
 import requests
 import base64
 from pathlib import Path
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 # 環境変数から設定を読み込む
 INSTAGRAM_ACCESS_TOKEN = os.environ['INSTAGRAM_ACCESS_TOKEN']
@@ -41,8 +42,7 @@ def upload_image(image_path):
 
 
 def generate_caption():
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
     prompt = """
 あなたはWEB商店街のInstagram投稿担当です。
@@ -74,7 +74,10 @@ WEB商店街とは、WEB上の街を歩きながら地域のお店と出会え�
 キャプションのみを出力してください。
 """
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.0-flash',
+        contents=prompt
+    )
     return response.text.strip()
 
 
