@@ -91,7 +91,9 @@ def post_to_instagram(image_url, caption):
             'access_token': INSTAGRAM_ACCESS_TOKEN
         }
     )
-    container_response.raise_for_status()
+    if not container_response.ok:
+        print(f'Instagram エラー詳細: {container_response.text}')
+        container_response.raise_for_status()
     container_id = container_response.json()['id']
     print(f'コンテナ作成完了: {container_id}')
 
