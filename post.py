@@ -75,7 +75,7 @@ WEB商店街とは、WEB上の街を歩きながら地域のお店と出会え�
 """
 
     response = client.models.generate_content(
-        model='gemini-2.0-flash',
+        model='gemini-3.6-flash',
         contents=prompt
     )
     return response.text.strip()
