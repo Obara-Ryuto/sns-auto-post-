@@ -71,6 +71,8 @@ WEB商店街とは、WEB上の街を歩きながら地域のお店と出会え�
 
 
 def post_to_instagram(image_url, caption):
+    import time
+
     # Step 1: メディアコンテナを作成
     container_response = requests.post(
         f'https://graph.instagram.com/v21.0/{INSTAGRAM_USER_ID}/media',
@@ -86,7 +88,24 @@ def post_to_instagram(image_url, caption):
     container_id = container_response.json()['id']
     print(f'コンテナ作成完了: {container_id}')
 
-    # Step 2: 投稿を公開
+    # Step 2: コンテナの処理完了を待つ
+    for i in range(10):
+        time.sleep(5)
+        status_response = requests.get(
+            f'https://graph.instagram.com/v21.0/{container_id}',
+            params={
+                'fields': 'status_code',
+                'access_token': INSTAGRAM_ACCESS_TOKEN
+            }
+        )
+        status = status_response.json().get('status_code')
+        print(f'コンテナ状態: {status}')
+        if status == 'FINISHED':
+            break
+        if status == 'ERROR':
+            raise Exception(f'コンテナ処理エラー: {status_response.text}')
+
+    # Step 3: 投稿を公開
     publish_response = requests.post(
         f'https://graph.instagram.com/v21.0/{INSTAGRAM_USER_ID}/media_publish',
         data={
@@ -94,7 +113,9 @@ def post_to_instagram(image_url, caption):
             'access_token': INSTAGRAM_ACCESS_TOKEN
         }
     )
-    publish_response.raise_for_status()
+    if not publish_response.ok:
+        print(f'公開エラー詳細: {publish_response.text}')
+        publish_response.raise_for_status()
     return publish_response.json()
 
 
