@@ -1,16 +1,16 @@
 import os
 import random
 import requests
-import base64
 from pathlib import Path
 from google import genai
-from google.genai import types
 
 # 環境変数から設定を読み込む
 INSTAGRAM_ACCESS_TOKEN = os.environ['INSTAGRAM_ACCESS_TOKEN']
 INSTAGRAM_USER_ID = os.environ['INSTAGRAM_USER_ID']
 GEMINI_API_KEY = os.environ['GEMINI_API_KEY']
-IMGBB_API_KEY = os.environ['IMGBB_API_KEY']
+
+GITHUB_REPO = 'Obara-Ryuto/sns-auto-post-'
+GITHUB_BRANCH = 'main'
 
 
 def get_random_image():
@@ -25,20 +25,9 @@ def get_random_image():
     return random.choice(image_files)
 
 
-def upload_image(image_path):
-    with open(image_path, 'rb') as f:
-        image_data = base64.b64encode(f.read()).decode('utf-8')
-
-    response = requests.post(
-        'https://api.imgbb.com/1/upload',
-        data={
-            'key': IMGBB_API_KEY,
-            'image': image_data,
-            'expiration': 600  # 10分間有効（Instagramが取得するのに十分）
-        }
-    )
-    response.raise_for_status()
-    return response.json()['data']['url']
+def get_image_url(image_path):
+    filename = image_path.name
+    return f'https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}'
 
 
 def generate_caption():
@@ -115,8 +104,7 @@ def main():
     image_path = get_random_image()
     print(f'選択した画像: {image_path}')
 
-    print('画像をアップロード中...')
-    image_url = upload_image(image_path)
+    image_url = get_image_url(image_path)
     print(f'画像URL: {image_url}')
 
     print('キャプションを生成中...')
