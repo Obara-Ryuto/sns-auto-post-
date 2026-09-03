@@ -1,7 +1,9 @@
 import os
 import random
+import time
 import requests
 from pathlib import Path
+from urllib.parse import quote
 from google import genai
 
 # 環境変数から設定を読み込む
@@ -26,7 +28,7 @@ def get_random_image():
 
 
 def get_image_url(image_path):
-    filename = image_path.name
+    filename = quote(image_path.name)
     return f'https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}'
 
 
@@ -63,15 +65,21 @@ WEB商店街とは、WEB上の街を歩きながら地域のお店と出会え�
 キャプションのみを出力してください。
 """
 
-    response = client.models.generate_content(
-        model='gemini-3.6-flash',
-        contents=prompt
-    )
-    return response.text.strip()
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model='gemini-3.6-flash',
+                contents=prompt
+            )
+            return response.text.strip()
+        except Exception as e:
+            print(f'Gemini エラー（試行{attempt+1}/3）: {e}')
+            if attempt < 2:
+                time.sleep(10)
+    raise Exception('Gemini APIが3回連続で失敗しました')
 
 
 def post_to_instagram(image_url, caption):
-    import time
 
     # Step 1: メディアコンテナを作成
     container_response = requests.post(
